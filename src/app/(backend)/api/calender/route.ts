@@ -1,27 +1,17 @@
-import { ne } from "drizzle-orm";
 import getAccessToken from "./utils";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Request) {
   //hard coded event body
-  //needs to have more arguments, calender type:secondary etc
-  let start: Date = new Date();
-  let end: Date = new Date();
+
   const event = {
-    summary: "test11 event",
-    description: "eventDescription: huhaha",
-    start: {
-      dateTime: start.toISOString(), // Date.toISOString() ->//googleCalen understands ISOString dates
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // timezone of current machnine
-    },
-    end: {
-      dateTime: end.toISOString(), // Date.toISOString() ->
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // America/Los_Angeles
-    },
+    summary: "new calender test 5",
+
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
   try {
-    const data = await fetch(
-      "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    const calenderID = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars`,
       {
         method: "POST",
         headers: {
@@ -29,17 +19,89 @@ export async function POST(req: Request, res: Request) {
         },
         body: JSON.stringify(event),
       }
-    )
-      .then((data) => {
-        return data;
-      })
-      .then((data) => {
-        console.log("callender event created", data);
-      });
+    ).then(async (data) => {
+      const dataa = await data.json();
+      console.log("callender created", dataa);
+      console.log("id", dataa.id);
+      return dataa.id;
+    });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return NextResponse.json({ status: 200 });
   } catch (error) {
     console.log("error in api of Calender");
+    return NextResponse.json({ status: 500 });
+  }
+}
+
+//update
+const calendarId =
+  "0c53ae3f8625ca52d13f0f6c4648b4814ba5c849005871afda73d7ca4574a557@group.calendar.google.com";
+export async function PUT(req: Request, res: Request) {
+  const event = {
+    summary: "new updated test 5",
+  };
+  try {
+    const calenderID = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${await getAccessToken()}`, // Access token for google
+        },
+        body: JSON.stringify(event),
+      }
+    ).then(async (data) => {
+      const dataa = await data.json();
+      console.log("callender", dataa);
+      console.log("id", dataa.id);
+      return dataa.id;
+    });
+
+    return NextResponse.json({ status: 200 });
+  } catch (error) {
+    console.log("error in api of Calender");
+    return NextResponse.json({ status: 500 });
+  }
+}
+
+//delete
+export async function DELETE(req: Request, res: Request) {
+  try {
+    const data = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${await getAccessToken()}`,
+        },
+      }
+    );
+
+    return NextResponse.json({ status: 200 });
+  } catch (error) {
+    console.log("error in delete of Calender");
+    return NextResponse.json({ status: 500 });
+  }
+}
+//get all calander
+export async function GET(req: Request, res: Request) {
+  try {
+    const data = await fetch(
+      `https://www.googleapis.com/calendar/v3/users/me/calendarList`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${await getAccessToken()}`,
+        },
+      }
+    ).then((data) => {
+      return data.json();
+    });
+    console.log(data);
+
+    return NextResponse.json({ status: 200 });
+  } catch (error) {
+    console.log("error in delete of Calender");
     return NextResponse.json({ status: 500 });
   }
 }
