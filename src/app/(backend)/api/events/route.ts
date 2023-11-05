@@ -1,21 +1,14 @@
 import { ne } from "drizzle-orm";
 import getAccessToken from "./utils";
-import { NextResponse } from "next/server";
-
-const id = "12abcd22";
-const calendarId =
-  "2be2451dfb32f45b6a4ffb2cd1666cf8ab4eb0c80becfca74d400b47fdf690fe@group.calendar.google.com";
+import { NextRequest, NextResponse } from "next/server";
+import { NextApiRequest } from "next";
 
 export async function POST(req: Request, res: Request) {
-  //hard coded event body
-  //needs to have more arguments, calender type:secondary etc
-  let start: Date = new Date();
-  let end: Date = new Date();
-  end.setMinutes(end.getMinutes() + 30);
+  const { calendarId, start, end, summary, description, userID } =
+    await req.json();
   const event = {
-    summary: "test20 id event",
-    description: "eventDescription: huhaha",
-    id: id,
+    summary: summary,
+    description: description,
     start: {
       dateTime: start.toISOString(), // Date.toISOString() ->//googleCalen understands ISOString dates
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // timezone of current machnine
@@ -23,6 +16,9 @@ export async function POST(req: Request, res: Request) {
     end: {
       dateTime: end.toISOString(), // Date.toISOString() ->
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // America/Los_Angeles
+    },
+    creator: {
+      id: userID,
     },
   };
   try {
@@ -45,19 +41,17 @@ export async function POST(req: Request, res: Request) {
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
-    console.log("error in api of Calender");
+    console.log("error in api of events");
     return NextResponse.json({ status: 500 });
   }
 }
 
 //delete
-export async function DELETE(req: Request, res: Request) {
-  //hard coded event body
-
-  const eventId = id;
+export async function DELETE(req: NextApiRequest, res: Request) {
+  const { calendarId, eventId } = await req.query;
 
   try {
-    const data = await fetch(
+    await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
       {
         method: "DELETE",
@@ -76,13 +70,11 @@ export async function DELETE(req: Request, res: Request) {
 
 //update
 export async function PUT(req: Request, res: Request) {
-  let start: Date = new Date();
-  let end: Date = new Date();
-  end.setMinutes(end.getMinutes() + 15);
-
+  const { calendarId, start, end, summary, description, eventId } =
+    await req.json();
   const event = {
-    summary: " UPDATED Event with 15",
-    description: "eventDescription: huhaha",
+    summary: summary,
+    description: description,
 
     start: {
       dateTime: start.toISOString(), // Date.toISOString() ->//googleCalen understands ISOString dates
@@ -94,7 +86,6 @@ export async function PUT(req: Request, res: Request) {
     },
   };
 
-  const eventId = id;
   try {
     const data = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`,
@@ -120,13 +111,14 @@ export async function PUT(req: Request, res: Request) {
   }
 }
 //get
-export async function GET(req: Request, res: Request) {
-  // can be modified to sort by start time of events using :
-  //orderBy: {
-  //startTime : Order by the start date/time (ascending)
-  //},
-  // singleEvents=true
-
+// can be modified to sort by start time of events using :
+//orderBy: {
+//startTime : Order by the start date/time (ascending)
+//},
+// singleEvents=true
+export async function GET(req: NextApiRequest, res: Request) {
+  const calendarId = req.query.calendarId as string;
+  console.log(calendarId);
   try {
     const data = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,

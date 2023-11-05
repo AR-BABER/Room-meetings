@@ -1,11 +1,12 @@
+import { NextApiRequest } from "next";
 import getAccessToken from "./utils";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request, res: Request) {
-  //hard coded event body
+  const { summary } = await req.json();
 
   const event = {
-    summary: "new calender test 5",
+    summary: summary,
 
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
@@ -34,9 +35,9 @@ export async function POST(req: Request, res: Request) {
 }
 
 //update
-const calendarId =
-  "0c53ae3f8625ca52d13f0f6c4648b4814ba5c849005871afda73d7ca4574a557@group.calendar.google.com";
+
 export async function PUT(req: Request, res: Request) {
+  const { calendarId } = await req.json();
   const event = {
     summary: "new updated test 5",
   };
@@ -65,7 +66,8 @@ export async function PUT(req: Request, res: Request) {
 }
 
 //delete
-export async function DELETE(req: Request, res: Request) {
+export async function DELETE(req: NextApiRequest, res: Request) {
+  const { calendarId } = await req.query;
   try {
     const data = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${calendarId}`,
